@@ -35,6 +35,7 @@ public class Help extends Command {
         commandRuler.getCommands().values().forEach(command -> {
             result.append(command.getName() + " : " + command.getDescription()+"\n\n");
         });
+        result.append("execute_script : выполнить скрипт указанного файла");
         return new Response(result.toString());
     }
 }

@@ -74,7 +74,11 @@ public class SocketClient {
                     Request request = new Request(command, ticket);
                     sendRequest(request, socketChannel);
                 } else if (command1.equals("execute_script")) {
-                    Execute_script.execute(command, socketChannel);
+                    try{
+                        Execute_script.execute(command, socketChannel);
+                    }catch (Exception e){
+                        console.println("Непредвиденная ошибка. Возможно вы ввели неправильное навщвание файла");
+                    }
                 } else if(!command1.equals("save")){
                     Request request = new Request(command, null);
                     sendRequest(request, socketChannel);

@@ -9,6 +9,7 @@ import server.rulers.CommandRuler;
 
 import java.io.*;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -99,24 +100,31 @@ public class SocketServer {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         while (true) {
-            int numRead = channel.read(buffer);
+            try{
+                int numRead = channel.read(buffer);
 
-            if (numRead == -1) {
-                // Клиент закрыл соединение
+                if (numRead == -1) {
+                    // Клиент закрыл соединение
+                    this.session.remove(channel);
+                    log.info("Пользователь отключился: " + channel.socket().getRemoteSocketAddress() + "\n");
+                    key.cancel();
+                    return;
+                }
+
+                if (numRead == 0) {
+                    // Нет данных для чтения
+                    break;
+                }
+
+                buffer.flip();
+                byteArrayOutputStream.write(buffer.array(), 0, buffer.limit());
+                buffer.clear();
+            }catch (SocketException e){
                 this.session.remove(channel);
-                log.info("Пользователь отключился: " + channel.socket().getRemoteSocketAddress() + "\n");
+                log.info("Пользователь внезапно отключился: " + channel.socket().getRemoteSocketAddress() + "\n");
                 key.cancel();
                 return;
             }
-
-            if (numRead == 0) {
-                // Нет данных для чтения
-                break;
-            }
-
-            buffer.flip();
-            byteArrayOutputStream.write(buffer.array(), 0, buffer.limit());
-            buffer.clear();
         }
 
         byte[] data = byteArrayOutputStream.toByteArray();
